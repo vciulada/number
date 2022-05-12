@@ -7,6 +7,11 @@ import (
 	"strings"
 )
 
+const (
+	PADDIRECTIONRIGHT = iota
+	PADDIRECTIONLEFT
+)
+
 func NewNumber(number string) Number {
 	result := Number{}
 	parts := strings.Split(number, ".")
@@ -40,14 +45,30 @@ func (n Number) String() string {
 	return fmt.Sprintf("%s.%s", n.whole, n.reminder)
 }
 
-func (n *Number) Add(a Number) Number {
-	result := Number{}
-	j := len(a.whole) - 1
+func pad(s string, direction int, length int, symbol string) string {
+	result := s
+
+	for i := 0; i < length-len(s); i++ {
+		switch direction {
+		case PADDIRECTIONLEFT:
+			result = fmt.Sprintf("%s%s", symbol, result)
+		case PADDIRECTIONRIGHT:
+			result = fmt.Sprintf("%s%s", result, symbol)
+		}
+	}
+
+	return result
+}
+func addReminder(pLeft, pRight string) (string, int) {
+	left := pad(pLeft, PADDIRECTIONRIGHT, len(pRight), "0")
+	right := pad(pRight, PADDIRECTIONRIGHT, len(pLeft), "0")
+
+	result := ""
 
 	var memory int
-	for i := len(n.whole) - 1; i >= 0; i-- {
-		x, _ := strconv.Atoi(string(n.whole[i]))
-		y, _ := strconv.Atoi(string(a.whole[j]))
+	for i := len(left) - 1; i >= 0; i-- {
+		x, _ := strconv.Atoi(string(left[i]))
+		y, _ := strconv.Atoi(string(right[i]))
 		sum := strconv.Itoa(x + y + memory)
 		memory = 0
 		var digit string
@@ -57,44 +78,47 @@ func (n *Number) Add(a Number) Number {
 		} else {
 			digit = sum
 		}
-		result.whole = fmt.Sprintf("%s%s", digit, result.whole)
-		j--
-		if j < 0 && i > 0 {
-			for z := i - 1; z >= 0; z-- {
-				x, _ := strconv.Atoi(string(n.whole[z]))
-				sum := strconv.Itoa(x + memory)
-				memory = 0
-				var digit string
-				if len(sum) > 1 {
-					memory, _ = strconv.Atoi(string(sum[0]))
-					digit = string(sum[1])
-				} else {
-					digit = sum
-				}
-				result.whole = fmt.Sprintf("%s%s", digit, result.whole)
-			}
-			break
-		}
+		result = fmt.Sprintf("%s%s", digit, result)
 	}
-	if j >= 0 {
-		for z := j; z >= 0; z-- {
-			x, _ := strconv.Atoi(string(a.whole[z]))
-			sum := strconv.Itoa(x + memory)
-			memory = 0
-			var digit string
-			if len(sum) > 1 {
-				memory, _ = strconv.Atoi(string(sum[0]))
-				digit = string(sum[1])
-			} else {
-				digit = sum
-			}
-			result.whole = fmt.Sprintf("%s%s", digit, result.whole)
+
+	return result, memory
+}
+
+func addWhole(pLeft, pRight string, pMemory int) string {
+	left := pad(pLeft, PADDIRECTIONLEFT, len(pRight), "0")
+	right := pad(pRight, PADDIRECTIONLEFT, len(pLeft), "0")
+
+	result := ""
+
+	memory := pMemory
+	for i := len(left) - 1; i >= 0; i-- {
+		x, _ := strconv.Atoi(string(left[i]))
+		y, _ := strconv.Atoi(string(right[i]))
+		sum := strconv.Itoa(x + y + memory)
+		memory = 0
+		var digit string
+		if len(sum) > 1 {
+			memory, _ = strconv.Atoi(string(sum[0]))
+			digit = string(sum[1])
+		} else {
+			digit = sum
 		}
+		result = fmt.Sprintf("%s%s", digit, result)
 	}
 	if memory > 0 {
 		digit := strconv.Itoa(memory)
-		result.whole = fmt.Sprintf("%s%s", digit, result.whole)
+		result = fmt.Sprintf("%s%s", digit, result)
 	}
+
+	return result
+}
+
+func (n *Number) Add(a Number) Number {
+
+	result := Number{}
+	var memory int
+	result.reminder, memory = addReminder(n.reminder, a.reminder)
+	result.whole = addWhole(n.whole, a.whole, memory)
 
 	return result
 }

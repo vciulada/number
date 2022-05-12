@@ -14,6 +14,28 @@ func TestNumber(t *testing.T) {
 	}
 }
 
+func TestPad(t *testing.T) {
+	tests := []struct {
+		input     string
+		direction int
+		length    int
+		symbol    string
+		expected  string
+	}{
+		{"10", PADDIRECTIONLEFT, 3, "0", "010"},
+		{"10", PADDIRECTIONLEFT, 2, "0", "10"},
+		{"10", PADDIRECTIONLEFT, 1, "0", "10"},
+		{"10", PADDIRECTIONRIGHT, 3, "0", "100"},
+		{"10", PADDIRECTIONRIGHT, 2, "0", "10"},
+		{"10", PADDIRECTIONRIGHT, 1, "0", "10"},
+	}
+	for _, tt := range tests {
+		if padded := pad(tt.input, tt.direction, tt.length, tt.symbol); padded != tt.expected {
+			t.Fatalf("pad does not work. expected %s. got %s", tt.expected, padded)
+		}
+	}
+}
+
 func TestAddNumber(t *testing.T) {
 	tests := []struct {
 		left     string
