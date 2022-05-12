@@ -59,16 +59,12 @@ func pad(s string, direction int, length int, symbol string) string {
 
 	return result
 }
-func addReminder(pLeft, pRight string) (string, int) {
-	left := pad(pLeft, PADDIRECTIONRIGHT, len(pRight), "0")
-	right := pad(pRight, PADDIRECTIONRIGHT, len(pLeft), "0")
 
-	result := ""
-
-	var memory int
-	for i := len(left) - 1; i >= 0; i-- {
-		x, _ := strconv.Atoi(string(left[i]))
-		y, _ := strconv.Atoi(string(right[i]))
+func sumString(pLeft, pRight string, pMemory int) (result string, memory int) {
+	memory = pMemory
+	for i := len(pLeft) - 1; i >= 0; i-- {
+		x, _ := strconv.Atoi(string(pLeft[i]))
+		y, _ := strconv.Atoi(string(pRight[i]))
 		sum := strconv.Itoa(x + y + memory)
 		memory = 0
 		var digit string
@@ -84,27 +80,19 @@ func addReminder(pLeft, pRight string) (string, int) {
 	return result, memory
 }
 
-func addWhole(pLeft, pRight string, pMemory int) string {
+func addReminder(pLeft, pRight string) (string, int) {
+	left := pad(pLeft, PADDIRECTIONRIGHT, len(pRight), "0")
+	right := pad(pRight, PADDIRECTIONRIGHT, len(pLeft), "0")
+
+	return sumString(left, right, 0)
+}
+
+func addWhole(pLeft, pRight string, pMemory int) (result string) {
 	left := pad(pLeft, PADDIRECTIONLEFT, len(pRight), "0")
 	right := pad(pRight, PADDIRECTIONLEFT, len(pLeft), "0")
 
-	result := ""
+	result, memory := sumString(left, right, pMemory)
 
-	memory := pMemory
-	for i := len(left) - 1; i >= 0; i-- {
-		x, _ := strconv.Atoi(string(left[i]))
-		y, _ := strconv.Atoi(string(right[i]))
-		sum := strconv.Itoa(x + y + memory)
-		memory = 0
-		var digit string
-		if len(sum) > 1 {
-			memory, _ = strconv.Atoi(string(sum[0]))
-			digit = string(sum[1])
-		} else {
-			digit = sum
-		}
-		result = fmt.Sprintf("%s%s", digit, result)
-	}
 	if memory > 0 {
 		digit := strconv.Itoa(memory)
 		result = fmt.Sprintf("%s%s", digit, result)
