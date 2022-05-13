@@ -235,6 +235,52 @@ func (n *Number) Deduct(a Number) Number {
 	return result
 }
 
+func (n *Number) Multiply(a Number) Number {
+	left := fmt.Sprintf("%s%s", n.whole, n.reminder)
+	right := fmt.Sprintf("%s%s", a.whole, a.reminder)
+	decimals := len(n.reminder) + len(a.reminder)
+	result := NewNumber("0")
+	decimalIndex := 0
+	for i := len(right) - 1; i >= 0; i-- {
+		multi := pad("", PADDIRECTIONLEFT, decimalIndex, "0")
+		var memory int
+		for j := len(left) - 1; j >= 0; j-- {
+			leftDigit, _ := strconv.Atoi(string(left[j]))
+			rightDigit, _ := strconv.Atoi(string(right[i]))
+			amt := strconv.Itoa(leftDigit*rightDigit + memory)
+			memory = 0
+			if len(amt) > 1 {
+				memory, _ = strconv.Atoi(string(amt[0]))
+				multi = fmt.Sprintf("%s%s", string(amt[1]), multi)
+			} else {
+				multi = fmt.Sprintf("%s%s", string(amt[0]), multi)
+			}
+
+		}
+		if memory > 0 {
+			multi = fmt.Sprintf("%d%s", memory, multi)
+			memory = 0
+		}
+		result = result.Add(NewNumber(multi))
+		decimalIndex++
+	}
+	result.reminder = result.whole[len(result.whole)-decimals:]
+	result.whole = result.whole[:len(result.whole)-decimals]
+	if len(result.reminder) > 0 {
+		for result.reminder[len(result.reminder)-1] == '0' {
+			result.reminder = result.reminder[:len(result.reminder)-1]
+			if len(result.reminder) == 0 {
+				break
+			}
+		}
+	}
+	if n.negative != a.negative {
+		result.negative = true
+	}
+
+	return result
+}
+
 func stringCompare(left, right string) int {
 	for i := 0; i < len(left); i++ {
 		leftDigit, _ := strconv.Atoi(string(left[i]))

@@ -55,6 +55,7 @@ func TestAddNumber(t *testing.T) {
 		{"11.01", "-10.09", "0.92"},
 		{"-11.01", "-10.09", "-21.1"},
 		{"-11.01", "10.09", "-0.92"},
+		{"0", "6", "6"},
 	}
 	for _, tt := range tests {
 		left := NewNumber(tt.left)
@@ -115,6 +116,33 @@ func TestDeduct(t *testing.T) {
 		result := left.Deduct(right)
 		if result.String() != tt.expected {
 			t.Fatalf("deducting %s from %s should give result %s. got %s", tt.right, tt.left, tt.expected, result.String())
+		}
+	}
+}
+
+func TestMultiply(t *testing.T) {
+	tests := []struct {
+		left     string
+		right    string
+		expected string
+	}{
+		{"2", "3", "6"},
+		{"8", "7", "56"},
+		{"11", "10", "110"},
+		{"11.1", "10", "111"},
+		{"10", "1.1", "11"},
+		{"10.01", "1.001", "10.02001"},
+		{"-10.01", "1.001", "-10.02001"},
+		{"10.01", "-1.001", "-10.02001"},
+		{"-10.01", "-10.001", "100.11001"},
+		{"-10.001", "-10.001", "100.020001"},
+	}
+	for _, tt := range tests {
+		left := NewNumber(tt.left)
+		right := NewNumber(tt.right)
+		result := left.Multiply(right)
+		if result.String() != tt.expected {
+			t.Fatalf("multiplication %s by %s should give result %s. got %s", tt.left, tt.right, tt.expected, result.String())
 		}
 	}
 }
