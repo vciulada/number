@@ -8,6 +8,12 @@ import (
 )
 
 const (
+	COMPAREEQUAL = iota
+	COMPARELESS
+	COMPAREMORE
+)
+
+const (
 	PADDIRECTIONRIGHT = iota
 	PADDIRECTIONLEFT
 )
@@ -84,7 +90,15 @@ func addReminder(pLeft, pRight string) (string, int) {
 	left := pad(pLeft, PADDIRECTIONRIGHT, len(pRight), "0")
 	right := pad(pRight, PADDIRECTIONRIGHT, len(pLeft), "0")
 
-	return sumString(left, right, 0)
+	result, reminder := sumString(left, right, 0)
+
+	for result[len(result)-1] == '0' {
+		result = result[:len(result)-1]
+		if len(result) == 0 {
+			break
+		}
+	}
+	return result, reminder
 }
 
 func addWhole(pLeft, pRight string, pMemory int) (result string) {
@@ -104,9 +118,54 @@ func addWhole(pLeft, pRight string, pMemory int) (result string) {
 func (n *Number) Add(a Number) Number {
 
 	result := Number{}
-	var memory int
-	result.reminder, memory = addReminder(n.reminder, a.reminder)
+	var memory int = 0
+	isReminder := n.reminder != "" || a.reminder != ""
+	if isReminder {
+		result.reminder, memory = addReminder(n.reminder, a.reminder)
+	}
 	result.whole = addWhole(n.whole, a.whole, memory)
 
 	return result
+}
+
+func stringCompare(left, right string) int {
+	for i := 0; i < len(left); i++ {
+		leftDigit, _ := strconv.Atoi(string(left[i]))
+		rightDigit, _ := strconv.Atoi(string(right[i]))
+		if leftDigit > rightDigit {
+			return COMPAREMORE
+		} else if rightDigit > leftDigit {
+			return COMPARELESS
+		}
+	}
+	return COMPAREEQUAL
+}
+
+func reminderCompare(pLeft, pRight string) int {
+	left := pad(pLeft, PADDIRECTIONRIGHT, len(pRight), "0")
+	right := pad(pRight, PADDIRECTIONRIGHT, len(pLeft), "0")
+	return stringCompare(left, right)
+}
+
+func wholeCompare(pLeft, pRight string) int {
+	left := pad(pLeft, PADDIRECTIONLEFT, len(pRight), "0")
+	right := pad(pRight, PADDIRECTIONLEFT, len(pLeft), "0")
+	return stringCompare(left, right)
+}
+
+func (n *Number) Less(a Number) bool {
+	switch wholeCompare(n.whole, a.whole) {
+	case COMPAREMORE:
+		return false
+	case COMPARELESS:
+		return true
+	case COMPAREEQUAL:
+		switch reminderCompare(n.reminder, a.reminder) {
+		case COMPARELESS:
+			return true
+		default:
+			return false
+		}
+	}
+	return false
 }
