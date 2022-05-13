@@ -51,6 +51,10 @@ func TestAddNumber(t *testing.T) {
 		{"10.9", "11.11", "22.01"},
 		{"10.9", "11.1", "22"},
 		{"10.09", "11.01", "21.1"},
+		{"-10.09", "11.01", "0.92"},
+		{"11.01", "-10.09", "0.92"},
+		{"-11.01", "-10.09", "-21.1"},
+		{"-11.01", "10.09", "-0.92"},
 	}
 	for _, tt := range tests {
 		left := NewNumber(tt.left)
@@ -77,6 +81,8 @@ func TestLess(t *testing.T) {
 		{"0.1", "0.11", true},
 		{"0.14", "0.134", false},
 		{"11.1", "12.01", true},
+		{"-1", "-2", false},
+		{"-1", "2", true},
 	}
 	for _, tt := range tests {
 		left := NewNumber(tt.left)
@@ -84,6 +90,31 @@ func TestLess(t *testing.T) {
 		result := left.Less(right)
 		if result != tt.expected {
 			t.Fatalf("Less does not work as expected compering %s and %s less should return %v. got %v", tt.left, tt.right, tt.expected, result)
+		}
+	}
+}
+
+func TestDeduct(t *testing.T) {
+	tests := []struct {
+		left     string
+		right    string
+		expected string
+	}{
+		{"11", "10", "1"},
+		{"11.1", "10", "1.1"},
+		{"10", "1.1", "8.9"},
+		{"10.01", "1.001", "9.009"},
+		{"-10.01", "1.001", "-11.011"},
+		{"10.01", "-1.001", "11.011"},
+		{"-10.01", "-10.001", "-0.009"},
+		{"-10.001", "-10.001", "0"},
+	}
+	for _, tt := range tests {
+		left := NewNumber(tt.left)
+		right := NewNumber(tt.right)
+		result := left.Deduct(right)
+		if result.String() != tt.expected {
+			t.Fatalf("deducting %s from %s should give result %s. got %s", tt.right, tt.left, tt.expected, result.String())
 		}
 	}
 }
