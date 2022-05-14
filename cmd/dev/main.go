@@ -3,17 +3,13 @@ package main
 import (
 	"fmt"
 	"log"
-	"strconv"
 
 	"github.com/vciulada/number"
 )
 
 func main() {
 	log.Println("start")
-	for i := 0; i < 1000000; i++ {
-		a := number.NewNumber(strconv.Itoa(i))
-		number := a.Multiply(a)
-		fmt.Println(number)
-	}
+	a := number.NewNumber("144")
+	fmt.Println(a.Devide(number.NewNumber("12")))
 	log.Println("end")
 }

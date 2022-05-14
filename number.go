@@ -18,31 +18,52 @@ const (
 	PADDIRECTIONLEFT
 )
 
+func isNumber(pInput string) bool {
+	const BIGGESTINTLENGTH int = 18
+	if len(pInput) > BIGGESTINTLENGTH {
+		input := pInput
+		for len(input) > 0 {
+			var reminder string
+			if len(input) >= BIGGESTINTLENGTH {
+				reminder = input[BIGGESTINTLENGTH:]
+				input = input[:BIGGESTINTLENGTH]
+			}
+			if !isNumber(input) {
+				return false
+			}
+			input = reminder
+		}
+	} else {
+		_, err := strconv.Atoi(pInput)
+		if err != nil {
+			return false
+		}
+	}
+	return true
+}
+
 func NewNumber(pNumber string) Number {
 	number := pNumber
 	result := Number{}
-	if number == "" {
-		number = "0"
-	}
-	if number[0] == '-' {
-		number = string(number[1:])
-		result.negative = true
-	}
-	parts := strings.Split(number, ".")
-	if len(parts) > 2 {
-		log.Fatalf("number conversion error, gor %d parts of the number %s", len(parts), number)
-	}
-	_, err := strconv.Atoi(parts[0])
-	if err != nil {
-		log.Fatalf("error while converting string %s to integer: %s", parts[0], err)
-	}
-	result.whole = parts[0]
-	if len(parts) > 1 {
-		_, err := strconv.Atoi(parts[1])
-		if err != nil {
-			log.Fatalf("error while converting string %s to integer: %s", parts[1], err)
+	if pNumber != "" {
+		if number[0] == '-' {
+			number = string(number[1:])
+			result.negative = true
 		}
-		result.reminder = parts[1]
+		parts := strings.Split(number, ".")
+		if len(parts) > 2 {
+			log.Fatalf("number conversion error, got %d parts of the number %s", len(parts), number)
+		}
+		if !isNumber(parts[0]) {
+			log.Fatalf("string %s is not a number", parts[0])
+		}
+		result.whole = parts[0]
+		if len(parts) > 1 {
+			if !isNumber(parts[1]) {
+				log.Fatalf("string %s is not a number", parts[1])
+			}
+			result.reminder = parts[1]
+		}
 	}
 	return result
 }
@@ -54,14 +75,18 @@ type Number struct {
 }
 
 func (n Number) String() string {
-	if n.reminder == "" {
-		return n.whole
+	whole := n.whole
+	if whole == "" {
+		whole = "0"
 	}
 	var sign string
 	if n.negative {
 		sign = "-"
 	}
-	return fmt.Sprintf("%s%s.%s", sign, n.whole, n.reminder)
+	if n.reminder == "" {
+		return fmt.Sprintf("%s%s", sign, whole)
+	}
+	return fmt.Sprintf("%s%s.%s", sign, whole, n.reminder)
 }
 
 func pad(s string, direction int, length int, symbol string) string {
@@ -231,6 +256,9 @@ func (n *Number) Deduct(a Number) Number {
 	}
 	result.whole = deductWhole(left.whole, right.whole, memory)
 	result.negative = left.negative
+	if result.String() == "-0" {
+		result.negative = false
+	}
 
 	return result
 }
@@ -278,6 +306,66 @@ func (n *Number) Multiply(a Number) Number {
 		result.negative = true
 	}
 
+	return result
+}
+
+func (n *Number) Devide(a Number) Number {
+	reminderLength := len(n.reminder)
+	if len(a.reminder) > reminderLength {
+		reminderLength = len(a.reminder)
+	}
+	left := NewNumber(fmt.Sprintf("%s%s", n.whole, pad(n.reminder, PADDIRECTIONRIGHT, reminderLength, "0")))
+	right := NewNumber(fmt.Sprintf("%s%s", a.whole, pad(a.reminder, PADDIRECTIONRIGHT, reminderLength, "0")))
+
+	result := NewNumber("")
+	if n.negative != a.negative {
+		result.negative = true
+	}
+
+	var digit int
+	var isReminder bool
+	var leftover string
+	if len(left.whole) > len(right.whole) {
+		leftover = left.whole[len(right.whole):]
+		left.whole = left.whole[:len(right.whole)]
+	}
+	for left.String() != "0" || len(leftover) > 0 {
+		diff := left.Deduct(right)
+		if !diff.negative {
+			digit++
+			left = diff
+		} else {
+			if isReminder {
+				if len(result.reminder) < 29 {
+					result.reminder = fmt.Sprintf("%s%s", result.reminder, strconv.Itoa(digit))
+				} else {
+					break
+				}
+			} else {
+				result.whole = fmt.Sprintf("%s%s", result.whole, strconv.Itoa(digit))
+			}
+			if len(leftover) == 0 {
+				left.whole = fmt.Sprintf("%s%s", left.whole, "0")
+				isReminder = true
+			} else {
+				left.whole = fmt.Sprintf("%s%s", left.whole, string(leftover[0]))
+				if len(leftover) > 1 {
+					leftover = leftover[1:]
+				} else {
+					leftover = ""
+				}
+			}
+			digit = 0
+		}
+	}
+	if isReminder {
+		result.reminder = fmt.Sprintf("%s%s", result.reminder, strconv.Itoa(digit))
+	} else {
+		result.whole = fmt.Sprintf("%s%s", result.whole, strconv.Itoa(digit))
+	}
+	for result.whole[0] == '0' && len(result.whole) > 1 {
+		result.whole = result.whole[1:]
+	}
 	return result
 }
 
@@ -336,4 +424,56 @@ func (n *Number) Less(a Number) bool {
 
 func (n *Number) More(a Number) bool {
 	return !n.Less(a)
+}
+
+func (n *Number) Round(precision uint) Number {
+	result := n.Copy()
+	if len(result.reminder) > int(precision) {
+		if digit, _ := strconv.Atoi(string(result.reminder[precision])); digit >= 5 {
+			if precision > 0 {
+				result = n.Add(NewNumber("0." + pad("1", PADDIRECTIONLEFT, int(precision), "0")))
+			} else {
+				result = n.Add(NewNumber("1"))
+			}
+		}
+		result.reminder = result.reminder[:precision]
+	}
+	return result
+}
+
+func (n *Number) RoundUp(precision uint) Number {
+	result := n.Copy()
+	if len(result.reminder) > int(precision) {
+		if precision > 0 {
+			result = n.Add(NewNumber("0." + pad("1", PADDIRECTIONLEFT, int(precision), "0")))
+		} else {
+			result = n.Add(NewNumber("1"))
+		}
+		result.reminder = result.reminder[:precision]
+	}
+	return result
+}
+
+func (n *Number) RoundDown(precision uint) Number {
+	result := n.Copy()
+	if len(result.reminder) > int(precision) {
+		result.reminder = result.reminder[:precision]
+	}
+	return result
+}
+
+func (n *Number) Ceil() Number {
+	result := n.Copy()
+	if len(result.reminder) > 0 {
+		if digit, _ := strconv.Atoi(string(result.reminder[0])); digit >= 0 {
+			result = n.Add(NewNumber("1"))
+		}
+		result.reminder = ""
+	}
+	return result
+}
+func (n *Number) Floor() Number {
+	result := n.Copy()
+	result.reminder = ""
+	return result
 }
