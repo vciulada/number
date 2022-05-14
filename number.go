@@ -154,9 +154,8 @@ func addWhole(pLeft, pRight string, pMemory int) (result string) {
 }
 
 func (n *Number) Abs() Number {
-	result := NewNumber("0")
-	result.whole = n.whole
-	result.reminder = n.reminder
+	result := n.Copy()
+	result.negative = false
 	return result
 }
 
@@ -226,7 +225,7 @@ func deductWhole(pLeft, pRight string, pMemory int) (result string) {
 }
 
 func (n *Number) Copy() Number {
-	result := NewNumber("0")
+	result := NewNumber("")
 	result.negative = n.negative
 	result.whole = n.whole
 	result.reminder = n.reminder
@@ -267,7 +266,7 @@ func (n *Number) Multiply(a Number) Number {
 	left := fmt.Sprintf("%s%s", n.whole, n.reminder)
 	right := fmt.Sprintf("%s%s", a.whole, a.reminder)
 	decimals := len(n.reminder) + len(a.reminder)
-	result := NewNumber("0")
+	result := NewNumber("")
 	decimalIndex := 0
 	for i := len(right) - 1; i >= 0; i-- {
 		multi := pad("", PADDIRECTIONLEFT, decimalIndex, "0")
