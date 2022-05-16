@@ -422,6 +422,9 @@ func (n *Number) Less(a Number) bool {
 }
 
 func (n *Number) More(a Number) bool {
+	if n.String() == a.String() {
+		return false
+	}
 	return !n.Less(a)
 }
 

@@ -84,6 +84,7 @@ func TestLess(t *testing.T) {
 		{"11.1", "12.01", true},
 		{"-1", "-2", false},
 		{"-1", "2", true},
+		{"1", "1", false},
 	}
 	for _, tt := range tests {
 		left := NewNumber(tt.left)
@@ -91,6 +92,35 @@ func TestLess(t *testing.T) {
 		result := left.Less(right)
 		if result != tt.expected {
 			t.Fatalf("Less does not work as expected compering %s and %s less should return %v. got %v", tt.left, tt.right, tt.expected, result)
+		}
+	}
+}
+
+func TestMore(t *testing.T) {
+	tests := []struct {
+		left     string
+		right    string
+		expected bool
+	}{
+		{"10", "11", false},
+		{"44", "17", true},
+		{"44", "171", false},
+		{"88", "88", false},
+		{"10.01", "111.001", false},
+		{"121.1", "10.11", true},
+		{"0.1", "0.11", false},
+		{"0.14", "0.134", true},
+		{"11.1", "12.01", false},
+		{"-1", "-2", true},
+		{"-1", "2", false},
+		{"1", "1", false},
+	}
+	for _, tt := range tests {
+		left := NewNumber(tt.left)
+		right := NewNumber(tt.right)
+		result := left.More(right)
+		if result != tt.expected {
+			t.Fatalf("More does not work as expected compering %s and %s more should return %v. got %v", tt.left, tt.right, tt.expected, result)
 		}
 	}
 }
