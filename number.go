@@ -335,7 +335,7 @@ func (n *Number) Devide(a Number) Number {
 			left = diff
 		} else {
 			if isReminder {
-				if len(result.reminder) < 29 {
+				if len(result.reminder) < 30 {
 					result.reminder = fmt.Sprintf("%s%s", result.reminder, strconv.Itoa(digit))
 				} else {
 					break
@@ -365,7 +365,7 @@ func (n *Number) Devide(a Number) Number {
 	for result.whole[0] == '0' && len(result.whole) > 1 {
 		result.whole = result.whole[1:]
 	}
-	return result
+	return result.Round(30)
 }
 
 func stringCompare(left, right string) int {
