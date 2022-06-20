@@ -330,3 +330,22 @@ func TestFloor(t *testing.T) {
 		}
 	}
 }
+func TestEqual(t *testing.T) {
+	tests := []struct {
+		inputOne string
+		inputTwo string
+		expected bool
+	}{
+		{"2", "2", true},
+		{"2.9", "2", false},
+		{"1.9", "2", false},
+	}
+	for _, tt := range tests {
+		inputOne := NewNumber(tt.inputOne)
+		inputTwo := NewNumber(tt.inputTwo)
+		result := inputOne.Equal(inputTwo)
+		if result != tt.expected {
+			t.Fatalf("Equal of  %s to %s should give result %v. got %v", tt.inputOne, tt.inputTwo, tt.expected, result)
+		}
+	}
+}

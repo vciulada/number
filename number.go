@@ -479,3 +479,12 @@ func (n *Number) Floor() Number {
 	result.reminder = ""
 	return result
 }
+
+func (n *Number) Equal(a Number) bool {
+	if wholeCompare(n.whole, a.whole) == COMPAREEQUAL {
+		if reminderCompare(n.reminder, a.reminder) == COMPAREEQUAL {
+			return true
+		}
+	}
+	return false
+}
